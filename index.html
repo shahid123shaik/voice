@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-Time Voice Translator</title>
+</head>
+<body>
+<h2>Real-Time Voice Translator</h2>
+
+<select id="inputLang">
+    {% for lang in input_langs %}
+    <option value="{{lang}}">{{lang}}</option>
+    {% endfor %}
+</select>
+
+<select id="outputLang">
+    {% for code, name in output_langs.items() %}
+    <option value="{{code}}">{{name}}</option>
+    {% endfor %}
+</select>
+
+<button id="startBtn">Start</button>
+<button id="stopBtn">Stop</button>
+
+<script>
+let ws;
+let mediaRecorder;
+let audioChunks = [];
+
+document.getElementById("startBtn").onclick = async function() {
+    ws = new WebSocket(`ws://${window.location.host}/ws`);
+    ws.binaryType = 'arraybuffer';
+    ws.onmessage = function(event) {
+        // Play received audio
+        let float32Array = new Float32Array(event.data);
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let buffer = audioCtx.createBuffer(1, float32Array.length, 16000);
+        buffer.copyToChannel(float32Array, 0);
+        let source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start();
+    };
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => {
+        let reader = new FileReader();
+        reader.onload = () => {
+            let float32 = new Float32Array(reader.result);
+            ws.send(float32.buffer);
+        };
+        reader.readAsArrayBuffer(e.data);
+    };
+    mediaRecorder.start(2000); // send chunks every 2s
+};
+
+document.getElementById("stopBtn").onclick = function() {
+    mediaRecorder.stop();
+    ws.close();
+};
+</script>
+</body>
+</html>
+

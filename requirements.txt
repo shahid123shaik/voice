@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+transformers
+torch
+openai-whisper
+pyttsx3
+numpy
+soundfile
+websockets
+jinja2
+
