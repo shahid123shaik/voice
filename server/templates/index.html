@@ -27,7 +27,7 @@ let mediaRecorder;
 let audioChunks = [];
 
 document.getElementById("startBtn").onclick = async function() {
-    ws = new WebSocket(`ws://${window.location.host}/ws`);
+    ws = new WebSocket(`wss://voice-translator.onrender.com/ws`);
     ws.binaryType = 'arraybuffer';
     ws.onmessage = function(event) {
         // Play received audio
